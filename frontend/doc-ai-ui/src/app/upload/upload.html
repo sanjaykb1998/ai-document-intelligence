@@ -1,0 +1,100 @@
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <h2>Document Intelligence System</h2>
+    <p>Upload and manage your AI-processed documents</p>
+  </div>
+
+  <!-- Upload Card -->
+  <div class="upload-card">
+    <h4>Upload Document</h4>
+
+    <div class="file-section">
+      <input type="file"
+             (change)="onFileSelected($event)"
+             class="file-input" />
+
+      <button (click)="upload()"
+              [disabled]="!selectedFile"
+              class="upload-btn">
+        Upload
+      </button>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-section">
+      <input
+        type="text"
+        placeholder="Search by file name or extracted text..."
+        (input)="onSearchChange($event.target.value)"
+        class="search-input" />
+    </div>
+
+    <!-- Selected file -->
+    <div *ngIf="selectedFile" class="selected-file">
+      Selected: {{ selectedFile.name }}
+    </div>
+
+    <!-- Message -->
+    <div *ngIf="message"
+         class="message"
+         [ngClass]="message.includes('successful') ? 'success' : 'error'">
+      {{ message }}
+    </div>
+  </div>
+
+  <!-- Documents Table -->
+  <div class="table-card">
+    <h4>Uploaded Documents</h4>
+
+    <table>
+      <thead>
+        <tr>
+          <th>File Name</th>
+          <th>Status</th>
+          <th>Uploaded</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <!-- MAIN LOOP (Only one ngFor) -->
+        <tr *ngFor="let doc of filteredDocuments$ | async">
+          <td>{{ doc.fileName }}</td>
+
+          <td>
+            <span class="status"
+              [ngClass]="{
+                'uploaded': doc.status === 'Uploaded',
+                'processing': doc.status === 'Processing',
+                'processed': doc.status === 'Processed',
+                'failed': doc.status === 'Failed'
+              }">
+              {{ doc.status }}
+            </span>
+          </td>
+
+          <td>{{ doc.uploadedAt | date:'medium' }}</td>
+
+          <td>
+            <button class="view-btn"
+                    (click)="viewText(doc)">
+              View
+            </button>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="(filteredDocuments$ | async)?.length === 0">
+          <td colspan="4" class="empty">
+            No documents found
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+</div>

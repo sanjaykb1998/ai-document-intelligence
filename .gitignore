@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.db
+*.log
+
+# Angular
+node_modules/
+dist/
+.angular/
+coverage/
+
+# VS Code
+.vscode/
+
+# Visual Studio
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure
+appsettings.json
+appsettings.Development.json
+node_modules/
+bin/
+obj/
+dist/
