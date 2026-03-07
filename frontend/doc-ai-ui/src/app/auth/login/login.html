@@ -22,14 +22,19 @@
 
       <button type="submit" [disabled]="loginForm.invalid">Login</button>
 
-      <p
-        *ngIf="loginMessage"
-        class="auth-message"
-        [class.success-message]="loginMessageType === 'success'"
-        [class.error-message]="loginMessageType === 'error'"
-      >
-        {{ loginMessage }}
-      </p>
+      @if (loginMessage) {
+        <p
+          class="auth-message"
+          [class.success-message]="loginMessageType === 'success'"
+          [class.error-message]="loginMessageType === 'error'"
+        >
+          {{ loginMessage }}
+        </p>
+      }
+
+      @if (showSignupAction && loginMessageType === 'error') {
+        <button type="button" class="signup-btn" (click)="goToSignup()">Go to Signup</button>
+      }
     </form>
   </div>
 </section>

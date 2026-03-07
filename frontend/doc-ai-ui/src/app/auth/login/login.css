@@ -77,6 +77,19 @@ button:disabled {
 	opacity: 0.55;
 }
 
+.signup-btn {
+	margin-top: 4px;
+	background: #ffffff;
+	color: #3f57d3;
+	border: 1px solid #ccd5eb;
+}
+
+.signup-btn:hover:not(:disabled) {
+	box-shadow: none;
+	transform: none;
+	background: #f8fbff;
+}
+
 .auth-message {
 	margin: 6px 0 0;
 	padding: 10px 12px;

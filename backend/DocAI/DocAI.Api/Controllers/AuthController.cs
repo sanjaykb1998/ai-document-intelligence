@@ -55,8 +55,12 @@ namespace DocAI.Api.Controllers
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == model.Username);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
-                return Unauthorized("Invalid credentials");
+            if (user == null)
+                return NotFound(new { message = "User does not exist" });
+
+            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+                return Unauthorized(new { message = "Invalid credentials" });
+
 
             var token = GenerateJwtToken(user);
 
