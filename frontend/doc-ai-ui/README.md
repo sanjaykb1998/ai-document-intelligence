@@ -1,59 +1,113 @@
-# DocAiUi
+AI Document Intelligence System
+A full-stack cloud application that allows users to upload documents, extract text using Azure AI, and search documents through an intelligent dashboard.
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
+Overview
+AI Document Intelligence System enables:
 
-## Development server
+Uploading documents to Azure Blob Storage
+Automatic text extraction using Azure AI Document Intelligence (Form Recognizer)
+Storing metadata and extracted text in SQL Server
+Searching and viewing processed documents from an Angular dashboard
+This project demonstrates end-to-end cloud integration with asynchronous processing and scalable architecture.
 
-To start a local development server, run:
+Tech Stack
+Backend
+ASP.NET Core Web API (.NET 8)
+Entity Framework Core
+SQL Server
+Azure Blob Storage
+Azure AI Document Intelligence
+Background processing using Task.Run and scoped services
+Frontend
+Angular (Standalone Components)
+RxJS (Observables, BehaviorSubject)
+Search & filter dashboard
+Responsive UI
+Features
+Document Management
+Upload documents (PDF, images, supported formats)
+Store files securely in Azure Blob Storage
+Save document metadata in SQL Server
+AI Processing
+Automatic text extraction using Azure AI
 
-```bash
+Background processing after upload
+
+Status tracking:
+
+Uploaded
+Processing
+Processed
+Failed
+Search Dashboard
+View all uploaded documents
+
+Search by:
+
+File name
+Extracted text
+Open document directly from Blob URL
+
+View extracted content
+
+Architecture
+User Upload → ASP.NET API → Azure Blob Storage → Save metadata → Background Processor → Azure AI Document Intelligence → Extract text → Save to SQL → Angular UI
+
+Project Structure
+DocAI
+│
+├── backend
+│   └── DocAI.Api
+│       ├── Controllers
+│       ├── Services
+│       ├── Data
+│       └── Models
+│
+├── frontend
+│   └── doc-ai-ui
+│       ├── components
+│       ├── services
+│       └── models
+Setup Instructions
+1. Clone repository
+git clone https://github.com/sanjaykb1998/ai-document-intelligence.git
+2. Backend Setup
+Update appsettings.json:
+
+ConnectionStrings:DefaultConnection
+AzureBlob:ConnectionString
+AzureBlob:ContainerName
+AzureAI:Endpoint
+AzureAI:Key
+Run migrations / database update.
+
+Run API:
+
+dotnet run
+3. Frontend Setup
+Navigate to frontend:
+
+cd frontend/doc-ai-ui
+npm install
 ng serve
-```
+Open:
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+http://localhost:4200
+API Endpoints
+Method	Endpoint	Description
+POST	/api/Documents/upload	Upload document
+GET	/api/Documents	Get all documents
+Key Implementation Highlights
+Asynchronous background processing using scoped services
+Azure cloud integration (Storage + AI)
+Reactive UI using RxJS
+Search over AI-extracted content
+Clean layered architecture (Controller → Service → Data)
+Future Enhancements
+Azure Queue / Background Worker
+Azure Cognitive Search integration
+Document summarization using Azure OpenAI
+Authentication (Azure AD / JWT)
+Pagination & advanced filters
+Author
+Sanjay B GitHub: https://github.com/sanjaykb1998
