@@ -2,8 +2,12 @@
 
   <!-- Header -->
   <div class="header">
-    <h2>Document Intelligence System</h2>
+    <div class="header-top">
+      <h2>Document Intelligence System</h2>
+      <button type="button" class="logout-btn" (click)="logout()">Logout</button>
+    </div>
     <p>Upload and manage your AI-processed documents</p>
+    <p *ngIf="loggedInUsername" class="user-info">Logged in as: {{ loggedInUsername }}</p>
   </div>
 
   <!-- Upload Card -->
@@ -95,6 +99,18 @@
 
       </tbody>
     </table>
+  </div>
+
+  <div *ngIf="isTextModalOpen" class="modal-backdrop" (click)="closeTextModal()">
+    <div class="text-modal" (click)="$event.stopPropagation()">
+      <div class="text-modal-header">
+        <h4>{{ modalTitle }}</h4>
+        <button type="button" class="modal-close" (click)="closeTextModal()">×</button>
+      </div>
+      <div class="text-modal-content">
+        {{ modalText }}
+      </div>
+    </div>
   </div>
 
 </div>

@@ -1,0 +1,45 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <h1>Create Account</h1>
+    <p class="auth-subtitle">Register once and start uploading your documents securely.</p>
+
+    <form [formGroup]="signupForm" (ngSubmit)="signup()" class="auth-form">
+      <label for="signup-username">Username</label>
+      <input
+        id="signup-username"
+        type="text"
+        formControlName="username"
+        placeholder="Choose a username"
+      />
+
+      <label for="signup-email">Email</label>
+      <input
+        id="signup-email"
+        type="email"
+        formControlName="email"
+        placeholder="Enter your email"
+      />
+
+      <label for="signup-password">Password</label>
+      <input
+        id="signup-password"
+        type="password"
+        formControlName="password"
+        placeholder="Create a password"
+      />
+
+      <button type="submit" [disabled]="signupForm.invalid">Sign up</button>
+
+      <p
+        *ngIf="signupMessage"
+        class="auth-message"
+        [class.success-message]="signupMessageType === 'success'"
+        [class.error-message]="signupMessageType === 'error'"
+      >
+        {{ signupMessage }}
+      </p>
+    </form>
+
+    <p class="switch-auth">Already have an account? <a routerLink="/login">Login</a></p>
+  </div>
+</section>

@@ -2,9 +2,12 @@
 using DocAI.Api.Data;
 using DocAI.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace DocAI.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase
@@ -26,16 +29,24 @@ public class DocumentsController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest("File is empty");
 
+        // 🔐 Get logged in user ID from token
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = Guid.Parse(userIdClaim);
+
+        if (userIdClaim == null)
+            return Unauthorized("Invalid token");
+
         // Upload to Azure
         var fileUrl = await _blobService.UploadAsync(file);
 
-        // Save to DB
+        // Save to DB with user details
         var document = new Document
         {
             FileName = file.FileName,
             FilePath = fileUrl,
             UploadedAt = DateTime.UtcNow,
-            Status = "Uploaded"
+            Status = "Uploaded",
+            UserId = userId
         };
 
         try
@@ -55,7 +66,16 @@ public class DocumentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetDocuments()
     {
+        // 🔐 Get logged in user ID from token
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null)
+            return Unauthorized("Invalid token");
+
+        var userId = Guid.Parse(userIdClaim);
+
         var docs = await _context.Documents
+            .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.UploadedAt)
             .ToListAsync();
 

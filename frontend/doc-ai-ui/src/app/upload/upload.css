@@ -8,18 +8,46 @@
 
 /* Header */
 .header {
-  text-align: center;
   margin-bottom: 40px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .header h2 {
   color: #1e3a8a;
   font-weight: 700;
+  margin: 0;
 }
 
 .header p {
   color: #475569;
   margin-top: 5px;
+}
+
+.logout-btn {
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #ffffff;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+.user-info {
+  margin-top: 10px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 /* Cards */
@@ -161,4 +189,55 @@ tbody tr:hover {
   text-align: center;
   padding: 20px;
   color: #64748b;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.text-modal {
+  width: min(760px, 100%);
+  max-height: 80vh;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.text-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.text-modal-header h4 {
+  margin: 0;
+  color: #1e3a8a;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.text-modal-content {
+  padding: 16px;
+  color: #1f2937;
+  white-space: pre-wrap;
+  overflow: auto;
+  line-height: 1.5;
 }

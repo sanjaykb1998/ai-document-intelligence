@@ -11,5 +11,7 @@ namespace DocAI.Api.Data
         }
 
         public DbSet<Document> Documents { get; set; }
+
+        public DbSet<User> Users { get; set; }
     }
 }
