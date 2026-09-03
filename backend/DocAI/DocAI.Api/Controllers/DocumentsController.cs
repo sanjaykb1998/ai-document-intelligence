@@ -15,12 +15,18 @@ public class DocumentsController : ControllerBase
     private readonly BlobService _blobService;
     private readonly AppDbContext _context;
     private readonly DocumentProcessorService _documentProcessorService;
+    private readonly DocumentChunkService _chunkService;
 
-    public DocumentsController(BlobService blobService, AppDbContext context, DocumentProcessorService documentProcessorService)
+    public DocumentsController(
+        BlobService blobService,
+        AppDbContext context,
+        DocumentProcessorService documentProcessorService,
+        DocumentChunkService chunkService)
     {
         _blobService = blobService;
         _context = context;
         _documentProcessorService = documentProcessorService;
+        _chunkService = chunkService;
     }
 
     [HttpPost("upload")]
@@ -80,6 +86,36 @@ public class DocumentsController : ControllerBase
         {
             return NotFound("File not found");
         }
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteDocument(Guid id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null)
+        {
+            return Unauthorized("Invalid token");
+        }
+        var userId = Guid.Parse(userIdClaim);
+
+        var document = await _context.Documents.FindAsync(id);
+        if (document == null)
+        {
+            return NotFound("Document not found");
+        }
+
+        if (document.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        await _blobService.DeleteAsync(document.FilePath);
+        await _chunkService.DeleteDocumentChunksAsync(document.Id);
+
+        _context.Documents.Remove(document);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpGet]

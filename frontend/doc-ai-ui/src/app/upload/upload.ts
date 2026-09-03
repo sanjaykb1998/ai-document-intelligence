@@ -229,6 +229,23 @@ export class UploadComponent implements OnInit {
     });
   }
 
+  deleteDocument(doc: Document) {
+    const confirmed = window.confirm(`Delete "${doc.fileName}"? This cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.documentService.deleteDocument(doc.id).subscribe({
+      next: () => {
+        this.message = 'Document deleted';
+        this.loadDocuments();
+      },
+      error: () => {
+        this.message = 'Delete failed';
+      }
+    });
+  }
+
   closeTextModal() {
     this.isTextModalOpen = false;
     this.modalTitle = '';

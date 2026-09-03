@@ -1,31 +1,87 @@
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef3ff 100%);
+  overflow: hidden;
+  background: radial-gradient(circle at 10% 10%, #1e1b4b 0%, #0f172a 45%, #0b1120 100%);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.auth-page::before,
+.auth-page::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+  z-index: 0;
+  animation: floatOrb 14s ease-in-out infinite;
+}
+
+.auth-page::before {
+  width: 380px;
+  height: 380px;
+  top: -100px;
+  left: -80px;
+  background: #6366f1;
+}
+
+.auth-page::after {
+  width: 320px;
+  height: 320px;
+  bottom: -120px;
+  right: -80px;
+  background: #ec4899;
+  animation-delay: -6s;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -32px) scale(1.08); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .auth-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 32px 28px;
-  box-shadow: 0 12px 30px rgba(25, 34, 72, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border-radius: 18px;
+  padding: 36px 30px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
   text-align: center;
+  animation: fadeInUp 0.6s ease both;
+}
+
+.auth-logo {
+  font-size: 2.4rem;
+  display: block;
+  text-align: center;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.6));
 }
 
 h1 {
   margin: 0;
+  font-family: 'Poppins', sans-serif;
   font-size: 1.8rem;
-  color: #1f2a56;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
   margin: 8px 0 24px;
-  color: #5f6b8f;
+  color: #94a3b8;
   font-size: 0.95rem;
 }
 
@@ -36,22 +92,36 @@ h1 {
 
 .primary-action,
 .secondary-action {
+  position: relative;
+  overflow: hidden;
   display: block;
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .primary-action {
   color: #ffffff;
-  background: linear-gradient(135deg, #4f6dff 0%, #3f57d3 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.primary-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.45);
 }
 
 .secondary-action {
-  color: #2c3865;
-  background: #eef2ff;
+  color: #a5b4fc;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.secondary-action:hover {
+  background: rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 480px) {

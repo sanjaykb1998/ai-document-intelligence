@@ -43,6 +43,24 @@ public class DocumentChunkService
         }
     }
 
+    public async Task DeleteDocumentChunksAsync(Guid documentId)
+    {
+        await FileLock.WaitAsync();
+        try
+        {
+            var allChunks = await LoadChunksUnsafeAsync();
+            var removed = allChunks.RemoveAll(chunk => chunk.DocumentId == documentId);
+            if (removed > 0)
+            {
+                await SaveChunksUnsafeAsync(allChunks);
+            }
+        }
+        finally
+        {
+            FileLock.Release();
+        }
+    }
+
     public async Task RebuildIndexAsync(IEnumerable<Document> documents)
     {
         var allChunks = new List<DocumentChunk>();

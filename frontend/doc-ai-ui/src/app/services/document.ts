@@ -33,6 +33,10 @@ export class DocumentService {
     });
   }
 
+  deleteDocument(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   semanticSearch(query: string): Observable<SearchResult[]> {
     return this.http.post<SearchResult[]>(
       `${environment.apiUrl}/api/search/semantic-search`,
