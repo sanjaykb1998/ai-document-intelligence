@@ -131,7 +131,14 @@ Document context:
                     }
                 });
 
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning(
+                    "LLM API request failed with status {StatusCode} at {BaseUrl} using model {Model}. Response: {ErrorBody}",
+                    (int)response.StatusCode, baseUrl, model, errorBody);
+                return null;
+            }
 
             var payload = await response.Content.ReadFromJsonAsync<ChatCompletionsResponse>();
             var content = payload?.Choices?.FirstOrDefault()?.Message?.Content;
