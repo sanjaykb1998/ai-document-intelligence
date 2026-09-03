@@ -1,18 +1,27 @@
 <div class="page-wrapper">
 
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
   <!-- Header -->
-  <div class="header">
+  <div class="header fade-in-up">
     <div class="header-top">
-      <h2>Document Intelligence System</h2>
-      <button type="button" class="logout-btn" (click)="logout()">Logout</button>
+      <div class="brand">
+        <span class="brand-logo">🧠</span>
+        <h2>DocAI <span class="brand-accent">Intelligence</span></h2>
+      </div>
+      <button type="button" class="logout-btn" (click)="logout()">
+        <span>Logout</span>
+      </button>
     </div>
-    <p>Upload and manage your AI-processed documents</p>
-    <p *ngIf="loggedInUsername" class="user-info">Logged in as: {{ loggedInUsername }}</p>
+    <p>Upload, search, and chat with your AI-processed documents</p>
+    <p *ngIf="loggedInUsername" class="user-info">👤 Logged in as: {{ loggedInUsername }}</p>
   </div>
 
   <!-- Upload Card -->
-  <div class="upload-card">
-    <h4>Upload Document</h4>
+  <div class="upload-card fade-in-up delay-1">
+    <h4><span class="card-icon">📤</span> Upload Document</h4>
 
     <div class="file-section">
       <input type="file"
@@ -37,7 +46,7 @@
 
     <!-- Selected file -->
     <div *ngIf="selectedFile" class="selected-file">
-      Selected: {{ selectedFile.name }}
+      📎 Selected: {{ selectedFile.name }}
     </div>
 
     <!-- Message -->
@@ -49,8 +58,8 @@
   </div>
 
   <!-- Documents Table -->
-  <div class="table-card">
-    <h4>Uploaded Documents</h4>
+  <div class="table-card fade-in-up delay-2">
+    <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
 
     <table>
       <thead>
@@ -105,8 +114,8 @@
     </table>
   </div>
 
-  <div class="table-card">
-    <h4>Chat with Documents</h4>
+  <div class="table-card fade-in-up delay-3">
+    <h4><span class="card-icon">💬</span> Chat with Documents</h4>
 
     <div class="search-section">
       <input
@@ -114,8 +123,9 @@
         [(ngModel)]="chatQuery"
         placeholder="Ask a question like ChatGPT..."
         class="search-input" />
-      <button type="button" class="upload-btn" (click)="askQuestion()" [disabled]="isAsking">
-        Ask
+      <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
+        <span *ngIf="!isAsking">Ask</span>
+        <span *ngIf="isAsking" class="spinner"></span>
       </button>
     </div>
 

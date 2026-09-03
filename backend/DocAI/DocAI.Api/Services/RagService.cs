@@ -54,12 +54,6 @@ public class RagService
 
     private async Task<string> GenerateAnswerAsync(string query, IReadOnlyList<SearchResult> sources)
     {
-        var directAnswer = TryBuildDirectAnswer(query, sources);
-        if (!string.IsNullOrWhiteSpace(directAnswer))
-        {
-            return directAnswer;
-        }
-
         var context = string.Join("\n\n", sources.Select(source =>
             $"Source: {source.FileName} (chunk {source.ChunkIndex})\n{source.Text}"));
 
@@ -71,10 +65,11 @@ public class RagService
         var prompt = $"""
 You are a helpful and precise assistant for answering questions based on uploaded documents.
 Guidelines:
-1. Base your answer strictly on the provided document context when available.
+1. Base your answer strictly on the provided document context. Do not guess or hallucinate details that are not present.
 2. If the user asks for a person's full name, identity details, or specific names, extract the complete full name exactly as written in the documents (including surname/last name, first name, and middle names, e.g. "Bayyareddy, Sanjay Kumar" or "Sanjay Kumar Bayyareddy").
-3. If the question asks for an amount, return the exact amount and currency found in the context.
-4. Keep the answer concise (1-3 clear sentences) and factual.
+3. If the question asks for an amount, dates, or a duration, compute/return the exact value found in or derivable from the context, including currency/units.
+4. If the answer cannot be found in the document context, say so clearly instead of guessing.
+5. Keep the answer concise (1-3 clear sentences) and factual.
 
 Question:
 {query}
@@ -97,6 +92,14 @@ Document context:
         if (!string.IsNullOrWhiteSpace(ollamaAnswer))
         {
             return ollamaAnswer;
+        }
+
+        // Heuristic-based extraction is only used as a last-resort fallback
+        // when no LLM (Groq/OpenAI/Ollama) is reachable.
+        var directAnswer = TryBuildDirectAnswer(query, sources);
+        if (!string.IsNullOrWhiteSpace(directAnswer))
+        {
+            return directAnswer;
         }
 
         return BuildFallbackAnswer(query, sources);
