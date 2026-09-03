@@ -31,19 +31,17 @@ public class DocumentsController : ControllerBase
 
         // 🔐 Get logged in user ID from token
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userId = Guid.Parse(userIdClaim);
-
         if (userIdClaim == null)
             return Unauthorized("Invalid token");
+        var userId = Guid.Parse(userIdClaim);
 
-        // Upload to Azure
-        var fileUrl = await _blobService.UploadAsync(file);
+        var storedFileName = await _blobService.UploadAsync(file);
 
         // Save to DB with user details
         var document = new Document
         {
             FileName = file.FileName,
-            FilePath = fileUrl,
+            FilePath = storedFileName,
             UploadedAt = DateTime.UtcNow,
             Status = "Uploaded",
             UserId = userId
@@ -57,10 +55,31 @@ public class DocumentsController : ControllerBase
         }
         catch (Exception ex)
         {
+            await _blobService.DeleteAsync(storedFileName);
             return StatusCode(500, ex.Message);
         }
 
         return Ok(document);
+    }
+
+    [HttpGet("{id:guid}/download")]
+    public async Task<IActionResult> DownloadDocument(Guid id)
+    {
+        var document = await _context.Documents.FindAsync(id);
+        if (document == null)
+        {
+            return NotFound("Document not found");
+        }
+
+        try
+        {
+            var (stream, contentType, _) = await _blobService.DownloadAsync(document.FilePath);
+            return File(stream, contentType, document.FileName);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound("File not found");
+        }
     }
 
     [HttpGet]

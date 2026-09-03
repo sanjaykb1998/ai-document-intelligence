@@ -23,7 +23,13 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Azure
+# App data & uploads
+App_Data/
+Uploads/
+uploads/
+*.pdf
+*.docx
+
 appsettings.json
 appsettings.Development.json
 node_modules/

@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Document } from '../models/document.model';
-import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
+import { SearchResult } from '../models/search-result.model';
+import { AskResponse } from '../models/ask-response.model';
+import { Observable, BehaviorSubject, combineLatest, map, timeout, finalize } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { DocumentService } from '../services/document';
 import { AuthService } from '../services/auth';
@@ -19,21 +20,31 @@ export class UploadComponent implements OnInit {
 
   selectedFile: File | null = null;
   message = '';
+  chatQuery = '';
+  chatMessage = '';
+  chatAnswer = '';
+  chatSources: SearchResult[] = [];
+  get uniqueSourceFileNames(): string[] {
+    return Array.from(new Set(this.chatSources.map(s => s.fileName).filter(name => !!name)));
+  }
+  isAsking = false;
+  private askWatchdog: ReturnType<typeof setTimeout> | null = null;
 
   private documentsSubject = new BehaviorSubject<Document[]>([]);
   documents$ = this.documentsSubject.asObservable();
   searchText$ = new BehaviorSubject<string>('');
   filteredDocuments$: Observable<Document[]>;
+  semanticResults: SearchResult[] = [];
   loggedInUsername = '';
   isTextModalOpen = false;
   modalTitle = '';
   modalText = '';
 
   constructor(
-    private http: HttpClient,
     private documentService: DocumentService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.filteredDocuments$ = combineLatest([
       this.documents$,
@@ -114,6 +125,63 @@ export class UploadComponent implements OnInit {
     this.searchText$.next(value);
   }
 
+  askQuestion() {
+    if (this.isAsking) {
+      return;
+    }
+
+    const query = this.chatQuery.trim();
+    if (!query) {
+      this.chatMessage = 'Enter a question to ask';
+      this.chatAnswer = '';
+      this.chatSources = [];
+      return;
+    }
+
+    this.chatMessage = 'Thinking...';
+    this.chatAnswer = '';
+    this.chatSources = [];
+    this.isAsking = true;
+    this.clearAskWatchdog();
+    this.askWatchdog = setTimeout(() => {
+      if (!this.isAsking) {
+        return;
+      }
+
+      this.isAsking = false;
+      this.chatMessage = 'Request timed out. Please check backend and Ollama, then try again.';
+      this.cdr.detectChanges();
+    }, 32000);
+
+    this.documentService.askQuestion(query).pipe(
+      timeout(30000),
+      finalize(() => {
+        this.isAsking = false;
+        this.clearAskWatchdog();
+      })
+    ).subscribe({
+      next: (response: AskResponse) => {
+        this.chatMessage = '';
+        const normalizedAnswer = response?.answer ?? response?.Answer ?? '';
+        const normalizedSources = response?.sources ?? response?.Sources ?? [];
+        this.chatAnswer = typeof normalizedAnswer === 'string' ? normalizedAnswer : '';
+        this.chatSources = Array.isArray(normalizedSources) ? normalizedSources : [];
+
+        if (!this.chatAnswer) {
+          this.chatMessage = 'No answer was returned by the server.';
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.chatMessage = 'Could not generate an answer. Please verify backend + Ollama are running.';
+        this.chatAnswer = '';
+        this.chatSources = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
   }
@@ -123,13 +191,7 @@ export class UploadComponent implements OnInit {
 
     this.message = 'Uploading...';
 
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    this.http.post(
-      'https://localhost:7018/api/Documents/upload',
-      formData
-    ).subscribe({
+    this.documentService.uploadDocument(this.selectedFile).subscribe({
       next: () => {
         this.message = 'Upload successful';
         this.selectedFile = null;
@@ -151,9 +213,32 @@ export class UploadComponent implements OnInit {
     this.isTextModalOpen = true;
   }
 
+  downloadDocument(doc: Document) {
+    this.documentService.downloadDocument(doc.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = doc.fileName;
+        anchor.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.message = 'Download failed';
+      }
+    });
+  }
+
   closeTextModal() {
     this.isTextModalOpen = false;
     this.modalTitle = '';
     this.modalText = '';
+  }
+
+  private clearAskWatchdog() {
+    if (this.askWatchdog) {
+      clearTimeout(this.askWatchdog);
+      this.askWatchdog = null;
+    }
   }
 }

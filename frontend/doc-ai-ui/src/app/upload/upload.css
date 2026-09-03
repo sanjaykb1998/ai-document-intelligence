@@ -116,6 +116,47 @@
   color: #b91c1c;
 }
 
+.chat-answer {
+  margin-top: 15px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #0f172a;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  border: 1px solid #bfdbfe;
+}
+
+.sources-section {
+  margin-top: 15px;
+}
+
+.sources-section h5 {
+  margin: 0 0 8px 0;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #cbd5e1;
+}
+
 /* Table */
 table {
   width: 100%;

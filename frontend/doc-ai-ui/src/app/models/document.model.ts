@@ -1,9 +1,9 @@
 export interface Document {
-  id: number;
+  id: string;
   fileName: string;
   filePath: string;
   uploadedAt: string;
   status: string;
-  extractedText: string; // Optional property for extracted text
-  summary: string;       // Optional property for summary
+  extractedText?: string | null;
+  summary?: string | null;
 }

@@ -87,6 +87,10 @@
                     (click)="viewText(doc)">
               View
             </button>
+            <button class="view-btn"
+                    (click)="downloadDocument(doc)">
+              Download
+            </button>
           </td>
         </tr>
 
@@ -99,6 +103,38 @@
 
       </tbody>
     </table>
+  </div>
+
+  <div class="table-card">
+    <h4>Chat with Documents</h4>
+
+    <div class="search-section">
+      <input
+        type="text"
+        [(ngModel)]="chatQuery"
+        placeholder="Ask a question like ChatGPT..."
+        class="search-input" />
+      <button type="button" class="upload-btn" (click)="askQuestion()" [disabled]="isAsking">
+        Ask
+      </button>
+    </div>
+
+    <div *ngIf="chatMessage" class="message">
+      {{ chatMessage }}
+    </div>
+
+    <div *ngIf="chatAnswer" class="chat-answer">
+      {{ chatAnswer }}
+    </div>
+
+    <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
+      <h5>Sources</h5>
+      <div class="sources-list">
+        <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
+          📄 {{ fileName }}
+        </span>
+      </div>
+    </div>
   </div>
 
   <div *ngIf="isTextModalOpen" class="modal-backdrop" (click)="closeTextModal()">
