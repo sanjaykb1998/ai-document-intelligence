@@ -6,7 +6,6 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root',
 })
-
 export class AuthService {
 
   private apiUrl = `${environment.apiUrl}/api/auth`;
@@ -14,26 +13,33 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   signup(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/signup`, data);
+    return this.http.post(`${this.apiUrl}/signup`, data, { withCredentials: true });
   }
 
   login(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, data);
+    return this.http.post(`${this.apiUrl}/login`, data, { withCredentials: true });
   }
 
-  saveToken(token: string) {
-    localStorage.setItem('token', token);
+  logout(): Observable<any> {
+    localStorage.removeItem('username');
+    return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
   }
 
-  getToken() {
-    return localStorage.getItem('token');
+  getCurrentUser(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/me`, { withCredentials: true });
   }
 
-  logout() {
-    localStorage.removeItem('token');
+  saveUsername(username: string) {
+    if (username) {
+      localStorage.setItem('username', username);
+    }
+  }
+
+  getUsername(): string {
+    return localStorage.getItem('username') || '';
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('username');
   }
 }

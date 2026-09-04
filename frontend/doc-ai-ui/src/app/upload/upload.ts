@@ -66,51 +66,19 @@ export class UploadComponent implements OnInit {
   }
 
   private loadLoggedInUser() {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.loggedInUsername = '';
-      return;
-    }
-
-    const payload = this.decodeJwtPayload(token);
-    if (!payload) {
-      this.loggedInUsername = '';
-      return;
-    }
-
-    this.loggedInUsername =
-      this.getStringClaim(payload, 'username') ||
-      this.getStringClaim(payload, 'unique_name') ||
-      this.getStringClaim(payload, 'name') ||
-      this.getStringClaim(payload, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name') ||
-      '';
+    this.loggedInUsername = this.authService.getUsername();
+    this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        if (user?.username) {
+          this.loggedInUsername = user.username;
+          this.authService.saveUsername(user.username);
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {}
+    });
   }
 
-  private decodeJwtPayload(token: string): Record<string, unknown> | null {
-    try {
-      const payloadPart = token.split('.')[1];
-      if (!payloadPart) {
-        return null;
-      }
-
-      const base64 = payloadPart
-        .replace(/-/g, '+')
-        .replace(/_/g, '/');
-      const padding = (4 - (base64.length % 4)) % 4;
-      const normalizedBase64 = `${base64}${'='.repeat(padding)}`;
-      const decoded = atob(normalizedBase64);
-      return JSON.parse(decoded) as Record<string, unknown>;
-    } catch {
-      return null;
-    }
-  }
-
-  private getStringClaim(payload: Record<string, unknown>, claim: string): string {
-    const claimValue = payload[claim];
-    return typeof claimValue === 'string' ? claimValue : '';
-  }
-
-  // 🔄 Load documents and rebuild filter stream
   loadDocuments() {
     this.documentService.getDocuments().subscribe({
       next: (docs) => this.documentsSubject.next(docs),
@@ -120,7 +88,6 @@ export class UploadComponent implements OnInit {
     });
   }
 
-  // 🔍 Search input change
   onSearchChange(value: string) {
     this.searchText$.next(value);
   }
@@ -206,8 +173,10 @@ export class UploadComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout();
-    this.router.navigate(['/']);
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/']),
+      error: () => this.router.navigate(['/'])
+    });
   }
 
   viewText(doc: Document) {

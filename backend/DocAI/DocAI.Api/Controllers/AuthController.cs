@@ -61,10 +61,43 @@ namespace DocAI.Api.Controllers
             if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Invalid credentials" });
 
-
             var token = GenerateJwtToken(user);
 
-            return Ok(new { token });
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:DurationInMinutes"] ?? "60"))
+            };
+
+            Response.Cookies.Append("jwt", token, cookieOptions);
+
+            return Ok(new { username = user.Username, email = user.Email });
+        }
+
+        // 🔹 Logout
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            return Ok(new { message = "Logged out successfully" });
+        }
+
+        // 🔹 Get Current User Me endpoint
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [HttpGet("me")]
+        public IActionResult GetCurrentUser()
+        {
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            return Ok(new { username, email });
         }
 
         // 🔹 Generate JWT

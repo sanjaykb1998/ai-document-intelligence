@@ -36,24 +36,10 @@ export class LoginComponent {
       this.authService.login(this.loginForm.value)
         .subscribe({
           next: (res: any) => {
-            if (res?.token) {
-              this.authService.saveToken(res.token);
-              this.loginMessageType = 'success';
-              this.loginMessage = 'Login successful. Redirecting...';
-              this.router.navigate(['/upload']);
-              return;
-            }
-
-            this.loginMessageType = 'error';
-            const responseMessage = this.getErrorMessage(res);
-            if (this.isUserNotFound(responseMessage)) {
-              this.loginMessage = 'User does not exist. Redirecting to signup...';
-              this.showSignupAction = true;
-              setTimeout(() => this.router.navigate(['/signup']), 1200);
-              return;
-            }
-
-            this.loginMessage = responseMessage || 'User not found or invalid credentials.';
+            this.authService.saveUsername(res?.username || this.loginForm.value.username);
+            this.loginMessageType = 'success';
+            this.loginMessage = 'Login successful. Redirecting...';
+            this.router.navigate(['/upload']);
           },
           error: (error: HttpErrorResponse) => {
             this.loginMessageType = 'error';
