@@ -19,144 +19,155 @@
     <p *ngIf="loggedInUsername" class="user-info">👤 Logged in as: {{ loggedInUsername }}</p>
   </div>
 
-  <!-- AI Search & Chat Card (Top Feature) -->
-  <div class="ai-chat-card fade-in-up delay-1">
-    <div class="card-header-row">
-      <h4><span class="card-icon glow-icon">💬</span> Ask AI / Search Documents</h4>
-      <span class="ai-badge">RAG Powered</span>
-    </div>
+  <!-- Dashboard 2-Column Grid -->
+  <div class="dashboard-grid">
 
-    <div class="search-section">
-      <input
-        type="text"
-        [(ngModel)]="chatQuery"
-        (keyup.enter)="askQuestion()"
-        placeholder="Ask a question like ChatGPT or search document content..."
-        class="search-input ai-search-input" />
-      <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
-        <span *ngIf="!isAsking">✨ Ask AI</span>
-        <span *ngIf="isAsking" class="spinner"></span>
-      </button>
-    </div>
+    <!-- Left Column: Ask AI & Upload Document -->
+    <div class="grid-left">
+      <!-- AI Search & Chat Card -->
+      <div class="ai-chat-card fade-in-up delay-1">
+        <div class="card-header-row">
+          <h4><span class="card-icon glow-icon">💬</span> Ask AI / Search Documents</h4>
+          <span class="ai-badge">RAG Powered</span>
+        </div>
 
-    <div *ngIf="chatMessage" class="message">
-      {{ chatMessage }}
-    </div>
+        <div class="search-section">
+          <input
+            type="text"
+            [(ngModel)]="chatQuery"
+            (keyup.enter)="askQuestion()"
+            placeholder="Ask a question like ChatGPT or search document content..."
+            class="search-input ai-search-input" />
+          <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
+            <span *ngIf="!isAsking">✨ Ask AI</span>
+            <span *ngIf="isAsking" class="spinner"></span>
+          </button>
+        </div>
 
-    <div *ngIf="chatAnswer" class="chat-answer glowing-answer">
-      <div class="answer-header">💡 AI Response</div>
-      {{ chatAnswer }}
-    </div>
+        <div *ngIf="chatMessage" class="message">
+          {{ chatMessage }}
+        </div>
 
-    <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
-      <h5>Sources Cited</h5>
-      <div class="sources-list">
-        <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
-          📄 {{ fileName }}
-        </span>
-      </div>
-    </div>
-  </div>
+        <div *ngIf="chatAnswer" class="chat-answer glowing-answer">
+          <div class="answer-header">💡 AI Response</div>
+          {{ chatAnswer }}
+        </div>
 
-  <!-- Upload Document Card -->
-  <div class="upload-card fade-in-up delay-2">
-    <h4><span class="card-icon">📤</span> Upload Document</h4>
-
-    <div class="file-section">
-      <input type="file"
-             (change)="onFileSelected($event)"
-             accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.bmp,.tif,.tiff"
-             class="file-input" />
-
-      <button (click)="upload()"
-              [disabled]="!selectedFile"
-              class="upload-btn">
-        Upload File
-      </button>
-    </div>
-
-    <!-- Selected file info -->
-    <div *ngIf="selectedFile" class="selected-file">
-      📎 Selected: {{ selectedFile.name }}
-    </div>
-
-    <!-- Upload Status Message -->
-    <div *ngIf="message"
-         class="message"
-         [ngClass]="message.includes('successful') ? 'success' : 'error'">
-      {{ message }}
-    </div>
-  </div>
-
-  <!-- Documents Table Card -->
-  <div class="table-card fade-in-up delay-3">
-    <div class="table-card-header">
-      <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
-      <!-- Table Filter Search -->
-      <div class="table-filter-box">
-        <input
-          type="text"
-          placeholder="Filter documents..."
-          (input)="onSearchChange($event.target.value)"
-          class="search-input filter-input" />
-      </div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>File Name</th>
-          <th>Status</th>
-          <th>Uploaded</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-
-      <tbody>
-
-        <!-- MAIN LOOP -->
-        <tr *ngFor="let doc of filteredDocuments$ | async">
-          <td>{{ doc.fileName }}</td>
-
-          <td>
-            <span class="status"
-              [ngClass]="{
-                'uploaded': doc.status === 'Uploaded',
-                'processing': doc.status === 'Processing',
-                'processed': doc.status === 'Processed',
-                'failed': doc.status === 'Failed'
-              }">
-              {{ doc.status }}
+        <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
+          <h5>Sources Cited</h5>
+          <div class="sources-list">
+            <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
+              📄 {{ fileName }}
             </span>
-          </td>
+          </div>
+        </div>
+      </div>
 
-          <td>{{ doc.uploadedAt | date:'medium' }}</td>
+      <!-- Upload Document Card -->
+      <div class="upload-card fade-in-up delay-2">
+        <h4><span class="card-icon">📤</span> Upload Document</h4>
 
-          <td>
-            <button class="view-btn"
-                    (click)="viewText(doc)">
-              View
-            </button>
-            <button class="view-btn"
-                    (click)="downloadDocument(doc)">
-              Download
-            </button>
-            <button class="view-btn delete-btn"
-                    (click)="deleteDocument(doc)">
-              Delete
-            </button>
-          </td>
-        </tr>
+        <div class="file-section">
+          <input type="file"
+                 (change)="onFileSelected($event)"
+                 accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.bmp,.tif,.tiff"
+                 class="file-input" />
 
-        <!-- Empty State -->
-        <tr *ngIf="(filteredDocuments$ | async)?.length === 0">
-          <td colspan="4" class="empty">
-            No documents found
-          </td>
-        </tr>
+          <button (click)="upload()"
+                  [disabled]="!selectedFile"
+                  class="upload-btn">
+            Upload File
+          </button>
+        </div>
 
-      </tbody>
-    </table>
+        <!-- Selected file info -->
+        <div *ngIf="selectedFile" class="selected-file">
+          📎 Selected: {{ selectedFile.name }}
+        </div>
+
+        <!-- Upload Status Message -->
+        <div *ngIf="message"
+             class="message"
+             [ngClass]="message.includes('successful') ? 'success' : 'error'">
+          {{ message }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Uploaded Documents Table -->
+    <div class="grid-right">
+      <div class="table-card fade-in-up delay-3">
+        <div class="table-card-header">
+          <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
+          <!-- Table Filter Search -->
+          <div class="table-filter-box">
+            <input
+              type="text"
+              placeholder="Filter documents..."
+              (input)="onSearchChange($event.target.value)"
+              class="search-input filter-input" />
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Status</th>
+                <th>Uploaded</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <!-- MAIN LOOP -->
+              <tr *ngFor="let doc of filteredDocuments$ | async">
+                <td class="file-name-cell" title="{{ doc.fileName }}">{{ doc.fileName }}</td>
+
+                <td>
+                  <span class="status"
+                    [ngClass]="{
+                      'uploaded': doc.status === 'Uploaded',
+                      'processing': doc.status === 'Processing',
+                      'processed': doc.status === 'Processed',
+                      'failed': doc.status === 'Failed'
+                    }">
+                    {{ doc.status }}
+                  </span>
+                </td>
+
+                <td class="date-cell">{{ doc.uploadedAt | date:'medium' }}</td>
+
+                <td class="action-cell">
+                  <button class="view-btn"
+                          (click)="viewText(doc)">
+                    View
+                  </button>
+                  <button class="view-btn"
+                          (click)="downloadDocument(doc)">
+                    Download
+                  </button>
+                  <button class="view-btn delete-btn"
+                          (click)="deleteDocument(doc)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr *ngIf="(filteredDocuments$ | async)?.length === 0">
+                <td colspan="4" class="empty">
+                  No documents found
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div *ngIf="isTextModalOpen" class="modal-backdrop" (click)="closeTextModal()">
