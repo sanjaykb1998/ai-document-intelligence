@@ -19,37 +19,68 @@
     <p *ngIf="loggedInUsername" class="user-info">👤 Logged in as: {{ loggedInUsername }}</p>
   </div>
 
-  <!-- Upload Card -->
-  <div class="upload-card fade-in-up delay-1">
+  <!-- AI Search & Chat Card (Top Feature) -->
+  <div class="ai-chat-card fade-in-up delay-1">
+    <div class="card-header-row">
+      <h4><span class="card-icon glow-icon">💬</span> Ask AI / Search Documents</h4>
+      <span class="ai-badge">RAG Powered</span>
+    </div>
+
+    <div class="search-section">
+      <input
+        type="text"
+        [(ngModel)]="chatQuery"
+        (keyup.enter)="askQuestion()"
+        placeholder="Ask a question like ChatGPT or search document content..."
+        class="search-input ai-search-input" />
+      <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
+        <span *ngIf="!isAsking">✨ Ask AI</span>
+        <span *ngIf="isAsking" class="spinner"></span>
+      </button>
+    </div>
+
+    <div *ngIf="chatMessage" class="message">
+      {{ chatMessage }}
+    </div>
+
+    <div *ngIf="chatAnswer" class="chat-answer glowing-answer">
+      <div class="answer-header">💡 AI Response</div>
+      {{ chatAnswer }}
+    </div>
+
+    <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
+      <h5>Sources Cited</h5>
+      <div class="sources-list">
+        <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
+          📄 {{ fileName }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Document Card -->
+  <div class="upload-card fade-in-up delay-2">
     <h4><span class="card-icon">📤</span> Upload Document</h4>
 
     <div class="file-section">
       <input type="file"
              (change)="onFileSelected($event)"
+             accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.bmp,.tif,.tiff"
              class="file-input" />
 
       <button (click)="upload()"
               [disabled]="!selectedFile"
               class="upload-btn">
-        Upload
+        Upload File
       </button>
     </div>
 
-    <!-- Search Box -->
-    <div class="search-section">
-      <input
-        type="text"
-        placeholder="Search by file name or extracted text..."
-        (input)="onSearchChange($event.target.value)"
-        class="search-input" />
-    </div>
-
-    <!-- Selected file -->
+    <!-- Selected file info -->
     <div *ngIf="selectedFile" class="selected-file">
       📎 Selected: {{ selectedFile.name }}
     </div>
 
-    <!-- Message -->
+    <!-- Upload Status Message -->
     <div *ngIf="message"
          class="message"
          [ngClass]="message.includes('successful') ? 'success' : 'error'">
@@ -57,9 +88,19 @@
     </div>
   </div>
 
-  <!-- Documents Table -->
-  <div class="table-card fade-in-up delay-2">
-    <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
+  <!-- Documents Table Card -->
+  <div class="table-card fade-in-up delay-3">
+    <div class="table-card-header">
+      <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
+      <!-- Table Filter Search -->
+      <div class="table-filter-box">
+        <input
+          type="text"
+          placeholder="Filter documents..."
+          (input)="onSearchChange($event.target.value)"
+          class="search-input filter-input" />
+      </div>
+    </div>
 
     <table>
       <thead>
@@ -73,7 +114,7 @@
 
       <tbody>
 
-        <!-- MAIN LOOP (Only one ngFor) -->
+        <!-- MAIN LOOP -->
         <tr *ngFor="let doc of filteredDocuments$ | async">
           <td>{{ doc.fileName }}</td>
 
@@ -116,39 +157,6 @@
 
       </tbody>
     </table>
-  </div>
-
-  <div class="table-card fade-in-up delay-3">
-    <h4><span class="card-icon">💬</span> Chat with Documents</h4>
-
-    <div class="search-section">
-      <input
-        type="text"
-        [(ngModel)]="chatQuery"
-        placeholder="Ask a question like ChatGPT..."
-        class="search-input" />
-      <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
-        <span *ngIf="!isAsking">Ask</span>
-        <span *ngIf="isAsking" class="spinner"></span>
-      </button>
-    </div>
-
-    <div *ngIf="chatMessage" class="message">
-      {{ chatMessage }}
-    </div>
-
-    <div *ngIf="chatAnswer" class="chat-answer">
-      {{ chatAnswer }}
-    </div>
-
-    <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
-      <h5>Sources</h5>
-      <div class="sources-list">
-        <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
-          📄 {{ fileName }}
-        </span>
-      </div>
-    </div>
   </div>
 
   <div *ngIf="isTextModalOpen" class="modal-backdrop" (click)="closeTextModal()">

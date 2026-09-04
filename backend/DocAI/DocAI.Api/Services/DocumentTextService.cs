@@ -1,4 +1,6 @@
+using System.IO.Compression;
 using System.Text;
+using System.Xml.Linq;
 using Tesseract;
 using UglyToad.PdfPig;
 
@@ -22,6 +24,8 @@ public class DocumentTextService
         return extension switch
         {
             ".pdf" => await ExtractFromPdfAsync(filePath),
+            ".docx" => await ExtractFromDocxAsync(filePath),
+            ".txt" => await ExtractFromTxtAsync(filePath),
             ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tif" or ".tiff" => await ExtractFromImageAsync(filePath),
             _ => throw new NotSupportedException($"Unsupported file type: {extension}")
         };
@@ -41,6 +45,41 @@ public class DocumentTextService
 
             return builder.ToString();
         });
+    }
+
+    private static Task<string> ExtractFromDocxAsync(string filePath)
+    {
+        return Task.Run(() =>
+        {
+            using var archive = ZipFile.OpenRead(filePath);
+            var entry = archive.GetEntry("word/document.xml");
+            if (entry == null)
+            {
+                return string.Empty;
+            }
+
+            using var stream = entry.Open();
+            var xdoc = XDocument.Load(stream);
+
+            var paragraphs = xdoc.Descendants().Where(e => e.Name.LocalName == "p");
+            var builder = new StringBuilder();
+
+            foreach (var p in paragraphs)
+            {
+                var pText = string.Concat(p.Descendants().Where(e => e.Name.LocalName == "t").Select(e => e.Value));
+                if (!string.IsNullOrWhiteSpace(pText))
+                {
+                    builder.AppendLine(pText);
+                }
+            }
+
+            return builder.ToString();
+        });
+    }
+
+    private static async Task<string> ExtractFromTxtAsync(string filePath)
+    {
+        return await File.ReadAllTextAsync(filePath, Encoding.UTF8);
     }
 
     private Task<string> ExtractFromImageAsync(string filePath)

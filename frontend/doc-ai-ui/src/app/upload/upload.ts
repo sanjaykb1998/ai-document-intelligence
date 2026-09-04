@@ -158,9 +158,11 @@ export class UploadComponent implements OnInit {
       finalize(() => {
         this.isAsking = false;
         this.clearAskWatchdog();
+        this.cdr.detectChanges();
       })
     ).subscribe({
       next: (response: AskResponse) => {
+        this.isAsking = false;
         this.chatMessage = '';
         const normalizedAnswer = response?.answer ?? response?.Answer ?? '';
         const normalizedSources = response?.sources ?? response?.Sources ?? [];
@@ -174,6 +176,7 @@ export class UploadComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
+        this.isAsking = false;
         this.chatMessage = 'Could not generate an answer. Please verify backend + Ollama are running.';
         this.chatAnswer = '';
         this.chatSources = [];
