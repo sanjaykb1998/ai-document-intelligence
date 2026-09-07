@@ -135,18 +135,26 @@
 }
 
 /* ============ Dashboard Grid Layout ============ */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 26px;
+.main-container {
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.docs-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
   align-items: start;
 }
 
-@media (max-width: 1024px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 960px) {
+  .docs-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -155,6 +163,8 @@
 .upload-card,
 .table-card {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -427,8 +437,27 @@
   border-radius: 12px;
   color: #e0e7ff;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-height: 420px;
+  overflow-y: auto;
   line-height: 1.7;
   animation: fadeInUp 0.45s ease both;
+}
+
+.chat-answer::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-answer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+.chat-answer::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.4);
+  border-radius: 4px;
+}
+.chat-answer::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.7);
 }
 
 .sources-section {

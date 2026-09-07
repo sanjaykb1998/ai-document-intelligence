@@ -19,51 +19,52 @@
     <p *ngIf="loggedInUsername" class="user-info">👤 Logged in as: {{ loggedInUsername }}</p>
   </div>
 
-  <!-- Dashboard 2-Column Grid -->
-  <div class="dashboard-grid">
+  <!-- Main Dashboard Container -->
+  <div class="main-container">
 
-    <!-- Left Column: Ask AI & Upload Document -->
-    <div class="grid-left">
-      <!-- AI Search & Chat Card -->
-      <div class="ai-chat-card fade-in-up delay-1">
-        <div class="card-header-row">
-          <h4><span class="card-icon glow-icon">💬</span> Ask AI / Search Documents</h4>
-          <span class="ai-badge">RAG Powered</span>
-        </div>
-
-        <div class="search-section">
-          <input
-            type="text"
-            [(ngModel)]="chatQuery"
-            (keyup.enter)="askQuestion()"
-            placeholder="Ask a question like ChatGPT or search document content..."
-            class="search-input ai-search-input" />
-          <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
-            <span *ngIf="!isAsking">✨ Ask AI</span>
-            <span *ngIf="isAsking" class="spinner"></span>
-          </button>
-        </div>
-
-        <div *ngIf="chatMessage" class="message">
-          {{ chatMessage }}
-        </div>
-
-        <div *ngIf="chatAnswer" class="chat-answer glowing-answer">
-          <div class="answer-header">💡 AI Response</div>
-          {{ chatAnswer }}
-        </div>
-
-        <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
-          <h5>Sources Cited</h5>
-          <div class="sources-list">
-            <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
-              📄 {{ fileName }}
-            </span>
-          </div>
-        </div>
+    <!-- Top Section: Ask AI & Search (Full Width) -->
+    <div class="ai-chat-card fade-in-up delay-1">
+      <div class="card-header-row">
+        <h4><span class="card-icon glow-icon">💬</span> Ask AI / Search Documents</h4>
+        <span class="ai-badge">RAG Powered</span>
       </div>
 
-      <!-- Upload Document Card -->
+      <div class="search-section">
+        <input
+          type="text"
+          [(ngModel)]="chatQuery"
+          (keyup.enter)="askQuestion()"
+          placeholder="Ask a question like ChatGPT or search document content..."
+          class="search-input ai-search-input" />
+        <button type="button" class="upload-btn ask-btn" (click)="askQuestion()" [disabled]="isAsking">
+          <span *ngIf="!isAsking">✨ Ask AI</span>
+          <span *ngIf="isAsking" class="spinner"></span>
+        </button>
+      </div>
+
+      <div *ngIf="chatMessage" class="message">
+        {{ chatMessage }}
+      </div>
+
+      <div *ngIf="chatAnswer" class="chat-answer glowing-answer">
+        <div class="answer-header">💡 AI Response</div>
+        {{ chatAnswer }}
+      </div>
+
+      <div *ngIf="uniqueSourceFileNames.length > 0" class="sources-section">
+        <h5>Sources Cited</h5>
+        <div class="sources-list">
+          <span *ngFor="let fileName of uniqueSourceFileNames" class="source-badge">
+            📄 {{ fileName }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section: 2-Column (Upload on Left, Documents Table on Right) -->
+    <div class="docs-grid">
+
+      <!-- Left Column: Upload Document -->
       <div class="upload-card fade-in-up delay-2">
         <h4><span class="card-icon">📤</span> Upload Document</h4>
 
@@ -75,7 +76,7 @@
 
           <button (click)="upload()"
                   [disabled]="!selectedFile"
-                  class="upload-btn">
+                  class="upload-btn upload-action-btn">
             Upload File
           </button>
         </div>
@@ -92,10 +93,8 @@
           {{ message }}
         </div>
       </div>
-    </div>
 
-    <!-- Right Column: Uploaded Documents Table -->
-    <div class="grid-right">
+      <!-- Right Column: Uploaded Documents Table -->
       <div class="table-card fade-in-up delay-3">
         <div class="table-card-header">
           <h4><span class="card-icon">🗂️</span> Uploaded Documents</h4>
@@ -166,6 +165,7 @@
           </table>
         </div>
       </div>
+
     </div>
 
   </div>
