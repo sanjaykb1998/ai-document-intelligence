@@ -145,13 +145,51 @@ public class DocumentChunkService
 
     private async Task<float[]> GetEmbeddingAsync(string text)
     {
+        // 1. Try Cloud Embedding API (Hugging Face / OpenAI / Jina) if API key is configured
+        var cloudApiKey = _configuration["Embedding:ApiKey"] ?? _configuration["HuggingFace:ApiKey"];
+        if (!string.IsNullOrWhiteSpace(cloudApiKey))
+        {
+            var cloudBaseUrl = _configuration["Embedding:BaseUrl"] ?? "https://router.huggingface.co/hf-inference/v1/embeddings";
+            var cloudModel = _configuration["Embedding:Model"] ?? "sentence-transformers/all-MiniLM-L6-v2";
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(10);
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", cloudApiKey);
+
+                var reqBody = new { model = cloudModel, input = text };
+                var response = await client.PostAsJsonAsync(cloudBaseUrl, reqBody);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await using var stream = await response.Content.ReadAsStreamAsync();
+                    using var json = await JsonDocument.ParseAsync(stream);
+                    if (TryReadEmbedding(json.RootElement, out var cloudEmbedding))
+                    {
+                        Normalize(cloudEmbedding);
+                        return cloudEmbedding;
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Cloud embedding request returned status code {StatusCode}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Cloud embedding request failed. Trying Ollama / Fallback.");
+            }
+        }
+
+        // 2. Try Local Ollama if available
         var model = _configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
         var baseUrl = _configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
 
         try
         {
             var client = _httpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromSeconds(12);
+            client.Timeout = TimeSpan.FromSeconds(5);
 
             var legacyResponse = await client.PostAsJsonAsync(
                 $"{baseUrl}/api/embeddings",
@@ -201,6 +239,26 @@ public class DocumentChunkService
 
     private static bool TryReadEmbedding(JsonElement root, out float[] embedding)
     {
+        // Standard OpenAI format: data[0].embedding
+        if (root.TryGetProperty("data", out var dataProperty) &&
+            dataProperty.ValueKind == JsonValueKind.Array &&
+            dataProperty.GetArrayLength() > 0)
+        {
+            var first = dataProperty[0];
+            if (first.TryGetProperty("embedding", out var embProp) && embProp.ValueKind == JsonValueKind.Array)
+            {
+                embedding = embProp.EnumerateArray().Select(item => item.GetSingle()).ToArray();
+                return embedding.Length > 0;
+            }
+        }
+
+        // Direct float array response e.g. [0.012, -0.045, ...]
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            embedding = root.EnumerateArray().Select(item => item.GetSingle()).ToArray();
+            return embedding.Length > 0;
+        }
+
         if (root.TryGetProperty("embedding", out var embeddingProperty) && embeddingProperty.ValueKind == JsonValueKind.Array)
         {
             embedding = embeddingProperty.EnumerateArray().Select(item => item.GetSingle()).ToArray();
