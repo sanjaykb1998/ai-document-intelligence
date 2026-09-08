@@ -1,18 +1,17 @@
 # DocAI — Document Intelligence & RAG Chat
 
-A full-stack document intelligence application that lets users securely upload PDFs and images, automatically extracts their text, and answers natural-language questions about the uploaded documents using Retrieval-Augmented Generation (RAG).
+A full-stack document intelligence platform that lets users securely upload documents across multiple formats (`.pdf`, `.docx`, `.txt`, images), automatically extracts structured text via native parsers and OCR, and answers natural-language questions using a high-precision Retrieval-Augmented Generation (RAG) pipeline.
 
 ## Overview
 
 DocAI enables:
 
-* Secure user authentication (JWT-based login/signup)
-* Uploading documents (PDF and image formats) per logged-in user
-* Automatic text extraction (PDF parsing + OCR for images)
-* Chunking and embedding extracted text for semantic search
-* Asking natural-language questions and getting AI-generated answers, grounded in your own documents (RAG)
-* Viewing, downloading, and deleting uploaded documents
-* A modern, dark glassmorphism UI with animations
+* **Zero-Trust Security**: Secure authentication via `HttpOnly`, `Secure`, `SameSite=None` JWT cookies (shielding against XSS and token tampering).
+* **Multi-Format Document Ingestion**: Supports `.pdf`, `.docx` (OpenXML), `.txt` (UTF-8), and image formats (`.png`, `.jpg`, `.jpeg`, `.bmp`, `.tif`, `.tiff`).
+* **Automated Text Extraction**: Native high-speed parsing for digital formats and Tesseract OCR for scanned images.
+* **3-Tier Vector Embedding Pipeline**: Cloud Hugging Face Inference embeddings (`sentence-transformers/all-MiniLM-L6-v2`), local Ollama (`nomic-embed-text`), and deterministic 256-D FNV-1a hashed fallback.
+* **Semantic Search & RAG Q&A**: Context-grounded Q&A via Groq / OpenAI LLMs with cosine similarity ranking and accurate source document attribution.
+* **Modern Dashboard**: 2-column responsive layout featuring full-width AI chat response, document status tracking, text preview, download, and delete actions.
 
 ---
 
@@ -20,66 +19,55 @@ DocAI enables:
 
 ### Backend
 
-* ASP.NET Core Web API (.NET 8)
-* Entity Framework Core (SQLite/SQL Server via `DefaultConnection`)
-* JWT Bearer authentication
-* PDF text extraction via PdfPig
-* OCR for images via Tesseract
-* Local JSON-based chunk/embedding index (`App_Data/document-chunks.json`)
-* LLM integration: Groq / OpenAI-compatible Chat Completions API (primary), Ollama (local fallback), heuristic text extraction (last-resort fallback)
-* Swagger / OpenAPI
+* **Framework**: ASP.NET Core Web API (.NET 8)
+* **Database & ORM**: SQLite / SQL Server via Entity Framework Core (`AppDbContext`)
+* **Security & Auth**: JWT authentication with `HttpOnly` cookie-based session management and BCrypt password hashing
+* **Document Parsing**: 
+  * PDF text extraction via `PdfPig`
+  * Word document (`.docx`) extraction via `System.IO.Compression` & `XDocument` (OpenXML)
+  * Plain text (`.txt`) extraction via UTF-8 streams
+  * Image OCR via `Tesseract`
+* **Embeddings & Vector Index**: 
+  * Cloud: Hugging Face Inference API (`sentence-transformers/all-MiniLM-L6-v2`)
+  * Local: Ollama API (`nomic-embed-text`)
+  * Deterministic fallback: FNV-1a bigram hashed vector embeddings
+  * Local chunk index: `App_Data/document-chunks.json`
+* **LLM Integration**: Groq API / OpenAI-compatible Chat Completions (`openai/gpt-oss-120b`), Ollama fallback, and rule-based fallback
+* **API Documentation**: Swagger / OpenAPI
 
 ### Frontend
 
-* Angular (standalone components)
-* RxJS (Observables, BehaviorSubject)
-* JWT-based auth guard + HTTP interceptor
-* Chat-style Q&A UI with source citations
-* Responsive, animated dark UI theme
-
----
-
-## Features
-
-### Authentication
-
-* Signup / login with JWT tokens
-* Auth guard protecting the document dashboard route
-* Logged-in username displayed from the JWT payload
-
-### Document Management
-
-* Upload PDF and image documents (`.pdf`, `.png`, `.jpg`, `.jpeg`, `.bmp`, `.tif`, `.tiff`)
-* Per-user document storage and ownership checks
-* Background text extraction with status tracking: `Uploaded` → `Processing` → `Processed` / `Failed`
-* View extracted text, download the original file, or delete a document (removes file, DB record, and its search-index chunks)
-
-### RAG Chat ("Ask a question")
-
-* Ask questions like ChatGPT about your uploaded documents
-* Retrieval: chunks are embedded and ranked by cosine similarity (+ lexical boosting) against the query
-* Generation priority:
-  1. Groq / OpenAI-compatible Chat Completions API (if `Llm:ApiKey` is configured)
-  2. Ollama (local LLM), if reachable
-  3. Heuristic regex-based extraction (amounts, dates/durations) as a last resort
-  4. Fallback: shortest relevant excerpt from the best-matching source
-* Answers include the source file name(s) used, deduplicated
+* **Framework**: Angular 17 (Standalone Components)
+* **State & Data Streams**: RxJS (`Observables`, `BehaviorSubject`, `async` pipe)
+* **HTTP & Security**: Interceptor configured with `withCredentials: true` for cross-domain cookie exchange; Route Auth Guard
+* **UI/UX**: Custom glassmorphism dark theme, animated CSS gradients, responsive 2-column grid layout, and code/text overflow handling
 
 ---
 
 ## Architecture
 
 ```
-User (Angular UI)
-   │  JWT auth
+User (Angular 17 on Vercel)
+   │  HttpOnly JWT Cookie (Cross-Origin CORS withCredentials)
    ▼
-ASP.NET Core API ──► Local file storage (Uploads/)
+ASP.NET Core 8 Web API (on Render) ──► Local file storage (uploads/)
    │
-   ├─► Text extraction (PdfPig / Tesseract OCR) ──► Status tracking
+   ├─► Text Extraction:
+   │     ├── .pdf  ──► PdfPig
+   │     ├── .docx ──► OpenXML (System.IO.Compression)
+   │     ├── .txt  ──► UTF-8 Reader
+   │     └── Images ──► Tesseract OCR
    │
-   ├─► Chunking + embeddings ──► App_Data/document-chunks.json
+   ├─► Chunking (1200 chars / 200 overlap) + Vector Embeddings:
+   │     ├── Tier 1: Hugging Face Cloud API (384-D)
+   │     ├── Tier 2: Local Ollama API (768-D)
+   │     └── Tier 3: Deterministic Hashed Fallback (256-D)
+   │     └── Storage ──► App_Data/document-chunks.json
    │
-   └─► RAG query: retrieve top chunks ──► Groq/OpenAI (or Ollama) ──► Answer + Sources
+   └─► RAG Retrieval & Generation:
+         ├── Query Embedding + Cosine Similarity Ranking (Top-5 chunks)
+         ├── Context Augmentation + Strict Prompting
+         └── Groq / OpenAI API (gpt-oss-120b) ──► Answer + Sources Cited
 ```
 
 ---
@@ -91,18 +79,20 @@ DocAI
 │
 ├── backend
 │   └── DocAI/DocAI.Api
-│       ├── Controllers      (Auth, Documents)
+│       ├── Controllers      (AuthController, DocumentsController, RagController, SearchController)
 │       ├── Services         (RagService, DocumentChunkService, DocumentTextService, DocumentProcessorService, BlobService)
-│       ├── Data             (EF Core DbContext)
-│       ├── Models
+│       ├── Data             (AppDbContext, EF Core Migrations)
+│       ├── Models           (Document, DocumentChunk, User, AskRequest/Response, SearchResult)
 │       └── Dockerfile
 │
 ├── frontend
 │   └── doc-ai-ui
 │       ├── src/app
-│       │   ├── auth         (login, signup, entry)
-│       │   ├── upload       (document dashboard + chat)
-│       │   └── services     (document, auth)
+│       │   ├── auth         (login, signup)
+│       │   ├── upload       (document dashboard + RAG chat)
+│       │   ├── services     (auth, document)
+│       │   ├── guards       (auth-guard)
+│       │   └── interceptors (auth-interceptor)
 │       └── vercel.json
 ```
 
@@ -112,25 +102,31 @@ DocAI
 
 ### 1. Clone repository
 
-```
+```bash
 git clone https://github.com/sanjaykb1998/ai-document-intelligence.git
 ```
 
 ### 2. Backend Setup
 
-Configure `backend/DocAI/DocAI.Api/appsettings.json` (or user-secrets / environment variables — env vars use double underscore, e.g. `Llm__ApiKey`):
+Configure `backend/DocAI/DocAI.Api/appsettings.json` (or set environment variables in cloud hosting using double underscores, e.g. `Llm__ApiKey`, `Embedding__ApiKey`):
 
 ```json
 {
   "Jwt": {
-    "Key": "<a long random secret>",
+    "Key": "<a long random secret key>",
     "Issuer": "DocIntelApp",
-    "Audience": "DocIntelUsers"
+    "Audience": "DocIntelUsers",
+    "DurationInMinutes": 60
   },
   "Llm": {
     "BaseUrl": "https://api.groq.com/openai/v1",
     "Model": "openai/gpt-oss-120b",
     "ApiKey": "<your Groq or OpenAI API key>"
+  },
+  "Embedding": {
+    "BaseUrl": "https://router.huggingface.co/hf-inference/v1/embeddings",
+    "Model": "sentence-transformers/all-MiniLM-L6-v2",
+    "ApiKey": "<your HuggingFace Read token>"
   },
   "Ollama": {
     "BaseUrl": "http://localhost:11434",
@@ -140,76 +136,60 @@ Configure `backend/DocAI/DocAI.Api/appsettings.json` (or user-secrets / environm
 }
 ```
 
-> `Llm.ApiKey` is required for Groq/OpenAI-quality answers. If left empty, the app falls back to Ollama, then to a much cruder heuristic. Groq's available models can change — check `GET https://api.groq.com/openai/v1/models` with your key to confirm a valid model name.
-
 Run the API:
 
-```
+```bash
 cd backend/DocAI/DocAI.Api
 dotnet run
 ```
 
 ### 3. Frontend Setup
 
-```
+```bash
 cd frontend/doc-ai-ui
 npm install
 ng serve
 ```
 
-Open:
-
-```
-http://localhost:4200
-```
-
-The frontend points to the backend URL configured in `src/environments/environment.ts` (local) and `environment.prod.ts` (production build, auto-swapped via Angular's `fileReplacements`).
+Open `http://localhost:4200` in your browser.
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint                     | Description                                          |
-| ------ | ----------------------------- | ----------------------------------------------------- |
-| POST   | /api/Auth/register            | Register a new user                                   |
-| POST   | /api/Auth/login               | Log in, returns a JWT                                  |
-| POST   | /api/Documents/upload         | Upload a document (PDF/image)                          |
-| GET    | /api/Documents                | Get the current user's documents                        |
-| GET    | /api/Documents/{id}/download  | Download a document's original file                     |
-| DELETE | /api/Documents/{id}           | Delete a document (file + chunks + record)              |
-| POST   | /api/Rag/ask                  | Ask a question, get an AI-generated answer + sources    |
+| Method | Endpoint                     | Description                                            |
+| ------ | ---------------------------- | ------------------------------------------------------ |
+| POST   | `/api/auth/signup`           | Register a new user account                            |
+| POST   | `/api/auth/login`            | Authenticate and issue secure `HttpOnly` JWT cookie    |
+| POST   | `/api/auth/logout`           | Clear authentication cookie                            |
+| GET    | `/api/auth/me`               | Retrieve currently authenticated user profile          |
+| POST   | `/api/documents/upload`      | Upload a document (`.pdf`, `.docx`, `.txt`, images)    |
+| GET    | `/api/documents`             | List all uploaded documents for current user           |
+| GET    | `/api/documents/{id}/download` | Download original uploaded document file             |
+| DELETE | `/api/documents/{id}`        | Delete document, local storage file, and search chunks |
+| POST   | `/api/rag/ask`               | Ask a question and receive AI answer with cited sources|
 
 ---
 
 ## Deployment
 
-* **Backend**: Dockerized ASP.NET Core app, deployed on [Render](https://render.com). Swagger is enabled in all environments for easy API inspection.
-* **Frontend**: Angular app deployed on [Vercel](https://vercel.com), with `vercel.json` handling SPA route rewrites.
-* Environment variables (Render) use double-underscore notation to map to nested config, e.g. `Llm__BaseUrl`, `Llm__Model`, `Llm__ApiKey`, `Jwt__Key`.
+* **Backend**: Dockerized ASP.NET Core API deployed on [Render](https://render.com).
+  * Configure environment variables in Render: `Llm__ApiKey`, `Embedding__ApiKey`, `Jwt__Key`.
+* **Frontend**: Angular 17 SPA deployed on [Vercel](https://vercel.com).
+  * `vercel.json` provides client-side route rewrites for seamless page refreshes.
 
 ---
 
 ## Key Implementation Highlights
 
-* RAG pipeline: chunking → embeddings → cosine-similarity retrieval → LLM generation, with a layered fallback chain (Groq/OpenAI → Ollama → heuristic → excerpt)
-* JWT-based authentication with per-user document ownership checks
-* Clean layered architecture (Controller → Service → Data)
-* Reactive Angular UI (RxJS observables, standalone components)
-* Modern, animated dark glassmorphism theme with custom branding/favicon
-
----
-
-## Future Enhancements
-
-* `.docx` and other document format support
-* Upfront file-type validation with clear user-facing errors
-* Vector database (e.g. pgvector, Qdrant) instead of a local JSON index for larger-scale search
-* Document summarization
-* Pagination & advanced filters on the dashboard
+* **End-to-End RAG Pipeline**: Combines sliding-window chunking, vector embeddings, cosine-similarity ranking, hybrid keyword boosting, and LLM inference.
+* **Zero-Trust Client Authentication**: Stores JWT tokens exclusively in `HttpOnly`, `SameSite=None`, `Secure` cookies with dynamic server-side origin validation to mitigate XSS and CSRF.
+* **Cross-Format Parsing**: Unified extraction service seamlessly routing between `PdfPig`, `OpenXML`, `Tesseract OCR`, and UTF-8 readers.
+* **Reliable Fallback Chains**: Graceful degradations across both embeddings (Hugging Face $\rightarrow$ Ollama $\rightarrow$ Hashed vector) and generative LLMs (Groq $\rightarrow$ Ollama $\rightarrow$ Heuristic extractor).
 
 ---
 
 ## Author
 
-**Sanjay B**
-GitHub: https://github.com/sanjaykb1998
+**Sanjay B**  
+GitHub: [https://github.com/sanjaykb1998](https://github.com/sanjaykb1998)
